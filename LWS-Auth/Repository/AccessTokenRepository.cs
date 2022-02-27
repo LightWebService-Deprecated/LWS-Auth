@@ -1,10 +1,10 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using LWS_Auth.Configuration;
+using LWS_Auth.Extension;
 using LWS_Auth.Models;
-using MongoDB.Bson;
-using MongoDB.Driver;
-using MongoDB.Driver.Linq;
+using Microsoft.Azure.Cosmos;
 
 namespace LWS_Auth.Repository;
 
@@ -17,58 +17,29 @@ public interface IAccessTokenRepository
 
 public class AccessTokenRepository : IAccessTokenRepository
 {
-    private readonly IMongoCollection<AccessToken> _accessTokenCollection;
+    private readonly Container _accessTokenContainer;
+    private IQueryable<AccessToken> AccessTokenQueryable => _accessTokenContainer.GetItemLinqQueryable<AccessToken>();
 
-    private IMongoQueryable<AccessToken> AccessTokenQueryable => _accessTokenCollection.AsQueryable();
-
-    public AccessTokenRepository(MongoContext mongoContext)
+    public AccessTokenRepository(CosmosClient cosmosClient, CosmosConfiguration cosmosConfiguration)
     {
-        _accessTokenCollection = mongoContext.MongoDatabase.GetCollection<AccessToken>(nameof(AccessToken));
-        CreateShardAsync(mongoContext, _accessTokenCollection);
-
-        // Create TTL
-        var key = Builders<AccessToken>.IndexKeys.Ascending("_ts");
-        var indexModel = new CreateIndexModel<AccessToken>(key, new CreateIndexOptions
-        {
-            ExpireAfter = TimeSpan.FromMinutes(30)
-        });
-        _accessTokenCollection.Indexes.CreateOne(indexModel);
-    }
-
-    private void CreateShardAsync(MongoContext mongoContext, IMongoCollection<AccessToken> collection)
-    {
-        var database = mongoContext.MongoDatabase;
-        var adminDb = mongoContext.MongoClient.GetDatabase("admin");
-        var databaseName = database.DatabaseNamespace.DatabaseName;
-        var collectionName = collection.CollectionNamespace.CollectionName;
-        adminDb.RunCommand<BsonDocument>(new BsonDocument()
-        {
-            {"enableSharding", $"{databaseName}"}
-        });
-
-        var shardPartition = new BsonDocument
-        {
-            {"shardCollection", $"{databaseName}.{collectionName}"},
-            {"key", new BsonDocument {{"userId", "hashed"}}}
-        };
-        var command = new BsonDocumentCommand<BsonDocument>(shardPartition);
-        var response = adminDb.RunCommand(command);
+        _accessTokenContainer = cosmosClient.GetContainer(cosmosConfiguration.CosmosDbname,
+            cosmosConfiguration.AccessTokenContainerName);
     }
 
     public async Task InsertAccessTokenAsync(AccessToken accessToken)
     {
-        await _accessTokenCollection.InsertOneAsync(accessToken);
+        await _accessTokenContainer.CreateItemAsync(accessToken, new PartitionKey(accessToken.UserId));
     }
 
     public async Task<AccessToken> GetAccessTokenByTokenAsync(string token)
     {
         return await AccessTokenQueryable.Where(a => a.Id == token)
-            .FirstOrDefaultAsync();
+            .CosmosFirstOrDefaultAsync();
     }
 
     public async Task<List<AccessToken>> ListAccessTokensAsync(string userId)
     {
         return await AccessTokenQueryable.Where(a => a.UserId == userId)
-            .ToListAsync();
+            .CosmosToListAsync();
     }
 }

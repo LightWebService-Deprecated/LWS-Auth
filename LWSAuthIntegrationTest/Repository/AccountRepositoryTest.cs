@@ -1,21 +1,23 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using LWS_Auth.Extension;
 using LWS_Auth.Models;
 using LWS_Auth.Repository;
-using MongoDB.Bson;
-using MongoDB.Driver;
+using Microsoft.Azure.Cosmos;
 using Xunit;
 
 namespace LWSAuthIntegrationTest.Repository;
 
-public class AccountRepositoryTest : MongoDatabaseHelper
+public class AccountRepositoryTest : CosmosDatabaseHelper
 {
     private readonly IAccountRepository _accountRepository;
-    private readonly IMongoCollection<Account> _accountCollection;
+    private readonly Container _accountContainer;
 
     private Account TestAccount => new Account
     {
+        Id = Ulid.NewUlid().ToString(),
         UserEmail = "kangdroid@test.com",
         UserNickName = "testUserNickName",
         UserPassword = "helloworld",
@@ -24,14 +26,16 @@ public class AccountRepositoryTest : MongoDatabaseHelper
 
     public AccountRepositoryTest()
     {
-        _accountRepository = new AccountRepository(MongoContext);
-        _accountCollection = MongoContext.MongoDatabase.GetCollection<Account>(nameof(Account));
+        _accountContainer =
+            CosmosClient.GetContainer(CosmosConfiguration.CosmosDbname, CosmosConfiguration.AccountContainerName);
+
+        _accountRepository = new AccountRepository(CosmosClient, CosmosConfiguration);
     }
 
     private async Task<List<Account>> GetAccountCollectionAsync()
     {
-        var result = await _accountCollection.FindAsync(FilterDefinition<Account>.Empty);
-        return await result.ToListAsync();
+        return await _accountContainer.GetItemLinqQueryable<Account>()
+            .CosmosToListAsync();
     }
 
     private void AccountEqual(Account testAccount, Account expectedAccount)
@@ -67,7 +71,7 @@ public class AccountRepositoryTest : MongoDatabaseHelper
     {
         // let
         var testAccount = TestAccount;
-        await _accountCollection.InsertOneAsync(testAccount);
+        await _accountContainer.CreateItemAsync(testAccount, new PartitionKey(testAccount.UserEmail));
 
         // Do
         var foundAccount = await _accountRepository.GetAccountByIdAsync(testAccount.Id);
@@ -82,7 +86,7 @@ public class AccountRepositoryTest : MongoDatabaseHelper
     public async Task Is_GetAccountByIdAsync_Returns_Null_When_No_Data()
     {
         // do
-        var foundAccount = await _accountRepository.GetAccountByIdAsync(ObjectId.GenerateNewId().ToString());
+        var foundAccount = await _accountRepository.GetAccountByIdAsync("asdfasdfasdfasdf");
 
         // Check
         Assert.Null(foundAccount);
@@ -94,7 +98,7 @@ public class AccountRepositoryTest : MongoDatabaseHelper
     {
         // Let
         var testAccount = TestAccount;
-        await _accountCollection.InsertOneAsync(testAccount);
+        await _accountContainer.CreateItemAsync(testAccount, new PartitionKey(testAccount.UserEmail));
 
         // Do
         var response = await _accountRepository.GetAccountByEmailAsync(testAccount.UserEmail);
@@ -120,7 +124,7 @@ public class AccountRepositoryTest : MongoDatabaseHelper
     {
         // Let
         var testAccount = TestAccount;
-        await _accountCollection.InsertOneAsync(testAccount);
+        await _accountContainer.CreateItemAsync(testAccount, new PartitionKey(testAccount.UserEmail));
 
         // Do
         testAccount.UserPassword = "AnotherTestPassword";
@@ -144,10 +148,10 @@ public class AccountRepositoryTest : MongoDatabaseHelper
     {
         // Let
         var testAccount = TestAccount;
-        await _accountCollection.InsertOneAsync(testAccount);
+        await _accountContainer.CreateItemAsync(testAccount, new PartitionKey(testAccount.UserEmail));
 
         // Do
-        await _accountRepository.RemoveAccountAsync(testAccount.Id);
+        await _accountRepository.RemoveAccountAsync(testAccount);
 
         // Check
         var dataList = await GetAccountCollectionAsync();

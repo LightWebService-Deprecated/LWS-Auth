@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
@@ -14,6 +15,7 @@ public class RegisterRequest
 
     public Account ToUserAccount() => new Account
     {
+        Id = Ulid.NewUlid().ToString(),
         UserEmail = this.UserEmail,
         UserNickName = this.UserNickName,
         UserPassword = BCrypt.Net.BCrypt.HashPassword(this.UserPassword),

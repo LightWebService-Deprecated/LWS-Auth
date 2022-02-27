@@ -1,7 +1,10 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using LWS_Auth.Configuration;
 using LWS_Auth.Repository;
 using LWS_Auth.Service;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,15 +31,16 @@ namespace LWS_Auth
             var configuration = builderContext.Configuration;
 
             // Setup MongoDB Configuration
-            var mongoConfiguration = configuration.GetSection("MongoSection").Get<MongoConfiguration>();
-            serviceCollection.AddSingleton(mongoConfiguration);
+            var cosmosConfiguration = configuration.GetSection("CosmosSection").Get<CosmosConfiguration>();
+            serviceCollection.AddSingleton(cosmosConfiguration);
 
             // Add Scoped Service(Mostly Business Logic)
             serviceCollection.AddScoped<AccountService>();
             serviceCollection.AddScoped<AccessTokenService>();
 
             // Add Singleton Service(Mostly Data Logic)
-            serviceCollection.AddSingleton<MongoContext>();
+            serviceCollection.AddSingleton<CosmosClient>(CosmosClientHelper.CreateCosmosClient(cosmosConfiguration)
+                .GetAwaiter().GetResult());
             serviceCollection.AddSingleton<IAccountRepository, AccountRepository>();
             serviceCollection.AddSingleton<IAccessTokenRepository, AccessTokenRepository>();
         }

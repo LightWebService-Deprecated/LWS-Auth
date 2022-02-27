@@ -1,7 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+using Newtonsoft.Json;
 
 namespace LWS_Auth.Models;
 
@@ -9,14 +9,12 @@ namespace LWS_Auth.Models;
 /// User model description. All about users!
 /// </summary>
 [ExcludeFromCodeCoverage]
-[BsonIgnoreExtraElements]
 public class Account
 {
     /// <summary>
     /// Unique ID[Or Identifier] for Each User.
     /// </summary>
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
+    [JsonProperty(PropertyName = "id")]
     public string Id { get; set; }
 
     /// <summary>
@@ -34,5 +32,5 @@ public class Account
     /// </summary>
     public string UserPassword { get; set; }
 
-    public HashSet<AccountRole> AccountRoles { get; set; } = new() {AccountRole.User};
+    public HashSet<AccountRole> AccountRoles { get; set; }
 }

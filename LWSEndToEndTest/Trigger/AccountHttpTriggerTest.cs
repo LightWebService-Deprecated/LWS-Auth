@@ -9,6 +9,7 @@ using LWS_Auth.Models.Request;
 using LWS_Auth.Repository;
 using LWSEndToEndTest.Extension;
 using LWSEndToEndTest.TestData;
+using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 using Xunit;
 
@@ -17,20 +18,23 @@ namespace LWSEndToEndTest.Trigger;
 public class AccountHttpTriggerTest : IDisposable
 {
     private readonly DockerHelper _dockerHelper;
-    private readonly MongoConfiguration _mongoConfiguration;
-    private readonly MongoContext _mongoContext;
+    private readonly CosmosConfiguration _cosmosConfiguration;
+    private readonly CosmosClient _cosmosClient;
     private readonly HttpClient _httpClient;
 
     public AccountHttpTriggerTest()
     {
         _dockerHelper = new DockerHelper();
-        _mongoConfiguration = new MongoConfiguration
+        _cosmosConfiguration = new CosmosConfiguration
         {
-            MongoConnection = Environment.GetEnvironmentVariable("E2E_MONGODB_CONNECTION"),
-            MongoDbName = Guid.NewGuid().ToString()
+            ConnectionString = Environment.GetEnvironmentVariable("INTEGRATION_COSMOS_CONNECTION"),
+            CosmosDbname = Guid.NewGuid().ToString(),
+            AccountContainerName = "Accounts",
+            AccessTokenContainerName = "AccessTokens"
         };
 
-        _mongoContext = new MongoContext(_mongoConfiguration);
+        _cosmosClient = CosmosClientHelper.CreateCosmosClient(_cosmosConfiguration)
+            .GetAwaiter().GetResult();
 
         _dockerHelper.CreateContainerAsync(new Dictionary<string, object>
         {
@@ -39,8 +43,10 @@ public class AccountHttpTriggerTest : IDisposable
             {
                 ["AzureWebJobsStorage"] = "UseDevelopmentStorage=true",
                 ["FUNCTIONS_WORKER_RUNTIME"] = "dotnet-isolated",
-                ["MongoSection:MongoConnection"] = _mongoConfiguration.MongoConnection,
-                ["MongoSection:MongoDbName"] = _mongoConfiguration.MongoDbName
+                ["CosmosSection:ConnectionString"] = _cosmosConfiguration.ConnectionString,
+                ["CosmosSection:CosmosDbname"] = _cosmosConfiguration.CosmosDbname,
+                ["CosmosSection:AccountContainerName"] = _cosmosConfiguration.AccountContainerName,
+                ["CosmosSection:AccessTokenContainerName"] = _cosmosConfiguration.AccessTokenContainerName
             }
         }).Wait();
 
@@ -163,7 +169,9 @@ public class AccountHttpTriggerTest : IDisposable
     {
         _dockerHelper.DestroyContainerAsync().Wait();
         _dockerHelper.Dispose();
-        _mongoContext.MongoClient.DropDatabase(_mongoConfiguration.MongoDbName);
-        _dockerHelper.Dispose();
+
+        _cosmosClient.GetDatabase(_cosmosConfiguration.CosmosDbname)
+            .DeleteAsync()
+            .Wait();
     }
 }

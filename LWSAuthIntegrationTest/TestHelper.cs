@@ -1,29 +1,36 @@
 using System;
 using LWS_Auth.Configuration;
 using LWS_Auth.Repository;
+using Microsoft.Azure.Cosmos;
 
 namespace LWSAuthIntegrationTest;
 
-public class MongoDatabaseHelper : IDisposable
+public class CosmosDatabaseHelper : IDisposable
 {
-    public readonly MongoContext MongoContext;
-    private readonly MongoConfiguration _mongoConfiguration;
+    public readonly CosmosClient CosmosClient;
+    public readonly CosmosConfiguration CosmosConfiguration;
 
-    protected MongoDatabaseHelper()
+    protected CosmosDatabaseHelper()
     {
-        var cosmosConnectionString = Environment.GetEnvironmentVariable("E2E_MONGODB_CONNECTION")
-                                     ?? throw new NullReferenceException("Mongodb Connection is not defined!");
-        _mongoConfiguration = new MongoConfiguration
+        var cosmosConnectionString = Environment.GetEnvironmentVariable("INTEGRATION_COSMOS_CONNECTION")
+                                     ?? throw new NullReferenceException("Cosmos Connection is not defined!");
+
+        CosmosConfiguration = new CosmosConfiguration
         {
-            MongoConnection = cosmosConnectionString,
-            MongoDbName = Guid.NewGuid().ToString()
+            ConnectionString = cosmosConnectionString,
+            CosmosDbname = Guid.NewGuid().ToString(),
+            AccessTokenContainerName = Guid.NewGuid().ToString(),
+            AccountContainerName = Guid.NewGuid().ToString()
         };
 
-        MongoContext = new MongoContext(_mongoConfiguration);
+        CosmosClient = CosmosClientHelper.CreateCosmosClient(CosmosConfiguration)
+            .GetAwaiter().GetResult();
     }
 
     public void Dispose()
     {
-        MongoContext.MongoClient.DropDatabase(_mongoConfiguration.MongoDbName);
+        CosmosClient.GetDatabase(CosmosConfiguration.CosmosDbname)
+            .DeleteAsync()
+            .Wait();
     }
 }

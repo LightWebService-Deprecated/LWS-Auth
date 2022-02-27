@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
@@ -10,10 +9,6 @@ using System.Threading.Tasks;
 using Docker.DotNet;
 using Docker.DotNet.Models;
 using Newtonsoft.Json;
-using SharpCompress.Archives;
-using SharpCompress.Archives.Tar;
-using SharpCompress.Common;
-using Xunit.Abstractions;
 
 namespace LWSEndToEndTest;
 

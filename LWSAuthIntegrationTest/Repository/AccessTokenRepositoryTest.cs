@@ -1,18 +1,18 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using LWS_Auth.Extension;
 using LWS_Auth.Models;
 using LWS_Auth.Repository;
-using MongoDB.Driver;
+using Microsoft.Azure.Cosmos;
 using Xunit;
 
 namespace LWSAuthIntegrationTest.Repository;
 
-public class AccessTokenRepositoryTest : MongoDatabaseHelper
+public class AccessTokenRepositoryTest : CosmosDatabaseHelper
 {
     private readonly IAccessTokenRepository _accessTokenRepository;
-    private readonly IMongoCollection<AccessToken> _accessToken;
+    private readonly Container _accessToken;
 
     private AccessToken TestAccessToken(string token = "testToken") => new AccessToken
     {
@@ -22,13 +22,15 @@ public class AccessTokenRepositoryTest : MongoDatabaseHelper
 
     public AccessTokenRepositoryTest()
     {
-        _accessTokenRepository = new AccessTokenRepository(MongoContext);
-        _accessToken = MongoContext.MongoDatabase.GetCollection<AccessToken>(nameof(AccessToken));
+        _accessTokenRepository = new AccessTokenRepository(CosmosClient, CosmosConfiguration);
+        _accessToken = CosmosClient.GetContainer(CosmosConfiguration.CosmosDbname,
+            CosmosConfiguration.AccessTokenContainerName);
     }
 
     private async Task<List<AccessToken>> ListAccessTokenAsync()
     {
-        return await (await _accessToken.FindAsync(FilterDefinition<AccessToken>.Empty)).ToListAsync();
+        return await _accessToken.GetItemLinqQueryable<AccessToken>()
+            .CosmosToListAsync();
     }
 
     [Fact(DisplayName =
@@ -70,7 +72,7 @@ public class AccessTokenRepositoryTest : MongoDatabaseHelper
     {
         // Let
         var accessToken = TestAccessToken();
-        await _accessToken.InsertOneAsync(accessToken);
+        await _accessToken.CreateItemAsync(accessToken, new PartitionKey(accessToken.UserId));
 
         // Do
         var result = await _accessTokenRepository.GetAccessTokenByTokenAsync(accessToken.Id);
@@ -85,12 +87,16 @@ public class AccessTokenRepositoryTest : MongoDatabaseHelper
     public async Task Is_ListAccessTokensAsync_Return_List_Of_Data_If_Data_Exists()
     {
         // Let
-        await _accessToken.InsertManyAsync(new List<AccessToken>
+        var toSaveList = new List<AccessToken>
         {
             TestAccessToken(),
             TestAccessToken("hello"),
             TestAccessToken("another")
-        });
+        };
+        foreach (var eachSave in toSaveList)
+        {
+            await _accessToken.CreateItemAsync(eachSave, new PartitionKey(eachSave.UserId));
+        }
 
         // Do
         var list = await _accessTokenRepository.ListAccessTokensAsync(TestAccessToken().UserId);
