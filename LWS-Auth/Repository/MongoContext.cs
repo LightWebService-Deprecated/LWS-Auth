@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using LWS_Auth.Configuration;
-using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 
 namespace LWS_Auth.Repository;
@@ -24,6 +24,10 @@ public class MongoContext
 
     public MongoContext(MongoConfiguration mongoConfiguration)
     {
+        // Setup MongoDB Naming Convention
+        var camelCase = new ConventionPack {new CamelCaseElementNameConvention()};
+        ConventionRegistry.Register("CamelCase", camelCase, a => true);
+
         MongoConfiguration = mongoConfiguration;
         MongoClient = new MongoClient(mongoConfiguration.MongoConnection);
         MongoDatabase = MongoClient.GetDatabase(mongoConfiguration.MongoDbName);
