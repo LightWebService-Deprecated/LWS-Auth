@@ -3,14 +3,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using LWS_Auth.Models;
 using LWS_Auth.Repository;
-using LWSAuthIntegrationTest.Helpers;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Xunit;
 
 namespace LWSAuthIntegrationTest.Repository;
 
-[Collection("DockerIntegration")]
 public class AccountRepositoryTest : MongoDatabaseHelper
 {
     private readonly IAccountRepository _accountRepository;
@@ -24,7 +22,7 @@ public class AccountRepositoryTest : MongoDatabaseHelper
         AccountRoles = new HashSet<AccountRole> {AccountRole.Admin}
     };
 
-    public AccountRepositoryTest(DockerFixture dockerFixture) : base(dockerFixture)
+    public AccountRepositoryTest()
     {
         _accountRepository = new AccountRepository(MongoContext);
         _accountCollection = MongoContext.MongoDatabase.GetCollection<Account>(nameof(Account));
