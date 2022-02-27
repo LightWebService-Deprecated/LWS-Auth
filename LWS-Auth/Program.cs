@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using LWS_Auth.Configuration;
+using LWS_Auth.Middleware;
 using LWS_Auth.Repository;
 using LWS_Auth.Service;
 using Microsoft.Azure.Cosmos;
@@ -17,7 +18,7 @@ namespace LWS_Auth
         public static void Main()
         {
             var host = new HostBuilder()
-                .ConfigureFunctionsWorkerDefaults()
+                .ConfigureFunctionsWorkerDefaults(a => a.UseMiddleware<AuthorizationMiddleware>())
                 .ConfigureServices(SetupDependencyService)
                 .Build();
 
