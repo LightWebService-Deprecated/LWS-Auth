@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LWS_Auth.Models;
@@ -174,5 +175,53 @@ public class AccountServiceTest
         // Check
         Assert.NotNull(loginResult);
         Assert.Equal(ResultType.Success, loginResult.ResultType);
+    }
+
+    [Fact(DisplayName =
+        "GetAccountInfoAsync: GetAccountInfoAsync should return InternalCommunication with ResultType NotFound when corresponding data does not exists.")]
+    public async Task Is_GetAccountInfoAsync_Returns_NotFound_When_Data_Not_Exists()
+    {
+        // Let
+        var userId = "testUserId";
+        
+        // Do
+        var result = await AccountService.GetAccountInfoAsync(userId);
+        
+        // Check
+        Assert.NotNull(result);
+        Assert.Equal(ResultType.DataNotFound, result.ResultType);
+    }
+
+    [Fact(DisplayName =
+        "GetAccountInfoAsync: GetAccountInfoAsync should return Internal Communication with Result Type Success when data exists")]
+    public async Task Is_GetAccountInfoAsync_Returns_Correct_Data_When_Data_Exists()
+    {
+        // Let
+        var userId = "testUserId";
+        var testAccount = new Account
+        {
+            Id = userId,
+            UserEmail = "test@test.com",
+            UserPassword = "testals;dfkjas;ldkfja",
+            AccountRoles = new HashSet<AccountRole> {AccountRole.User},
+            UserNickName = "Test"
+        };
+        _mockAccountRepository.Setup(a => a.GetAccountByIdAsync(userId))
+            .ReturnsAsync(testAccount);
+        
+        // Do
+        var result = await AccountService.GetAccountInfoAsync(userId);
+        
+        // Verify
+        _mockAccountRepository.VerifyAll();
+        
+        // Check
+        Assert.NotNull(result);
+        Assert.Equal(ResultType.Success, result.ResultType);
+        Assert.Equal(testAccount.Id, result.Result.Id);
+        Assert.Equal(testAccount.UserEmail, result.Result.UserEmail);
+        Assert.Equal(testAccount.UserPassword, result.Result.UserPassword);
+        Assert.Equal(testAccount.AccountRoles, result.Result.AccountRoles);
+        Assert.Equal(testAccount.UserNickName, result.Result.UserNickName);
     }
 }

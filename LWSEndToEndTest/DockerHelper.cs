@@ -75,7 +75,7 @@ public class DockerHelper : IDisposable
             BaseAddress = new Uri(connectionString)
         };
 
-        for (var i = 0; i < 10; i++)
+        for (var i = 0; i < 20; i++)
         {
             try
             {
@@ -86,7 +86,7 @@ public class DockerHelper : IDisposable
             {
             }
 
-            if (i == 9) throw new InvalidOperationException("Server did not started in 10 sec!");
+            if (i == 19) throw new InvalidOperationException("Server did not started in 10 sec!");
             Thread.Sleep(1000);
         }
 

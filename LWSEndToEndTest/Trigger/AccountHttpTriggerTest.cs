@@ -165,6 +165,32 @@ public class AccountHttpTriggerTest : IDisposable
         Assert.NotNull(responseBody.Id);
     }
 
+    [Fact(DisplayName =
+        "GET /api/account (AccountInfo) should return Unauthorized result if there is no token provided.")]
+    public async Task Is_GetAccountInfo_Returns_Unauthorized_If_No_Token_Provided()
+    {
+        // do
+        var response = await _httpClient.GetAsync("/api/account");
+        
+        // Check
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact(DisplayName = "GET /api/account (AccountInfo) should return OK with data if succeeds request.")]
+    public async Task Is_GetAccountInfo_Returns_OK_With_Corresponding_Object()
+    {
+        // Login
+        var (registerRequest, accessToken) = await RegisterAndLoginAsync();
+        
+        // Do
+        _httpClient.DefaultRequestHeaders.Add("X-LWS-AUTH", accessToken.Id);
+        var response = await _httpClient.GetAsync("/api/account");
+        _httpClient.DefaultRequestHeaders.Clear();
+        
+        // Check
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+    
     public void Dispose()
     {
         _dockerHelper.DestroyContainerAsync().Wait();
@@ -173,5 +199,35 @@ public class AccountHttpTriggerTest : IDisposable
         _cosmosClient.GetDatabase(_cosmosConfiguration.CosmosDbname)
             .DeleteAsync()
             .Wait();
+    }
+
+    private async Task<(RegisterRequest, AccessToken)> RegisterAndLoginAsync()
+    {
+        // Let
+        var registerRequest = new RegisterRequest
+        {
+            UserEmail = "test@test.com",
+            UserPassword = "helloworld",
+            UserNickName = "test"
+        };
+        var response = await _httpClient.PostObjectAsync("/api/account", registerRequest);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var loginRequest = new LoginRequest
+        {
+            UserEmail = registerRequest.UserEmail,
+            UserPassword = registerRequest.UserPassword
+        };
+
+        // Do
+        var loginResponse = await _httpClient.PostObjectAsync("/api/account/login", loginRequest);
+
+        // Check
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
+        var responseBody = JsonConvert.DeserializeObject<AccessToken>(await loginResponse.Content.ReadAsStringAsync());
+        Assert.NotNull(responseBody);
+        Assert.NotNull(responseBody.Id);
+
+        return (registerRequest, responseBody);
     }
 }

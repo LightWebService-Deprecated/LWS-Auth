@@ -44,7 +44,7 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
 
     private static string TryGetTokenFromHeaders(FunctionContext context)
     {
-        if (!context.BindingContext.BindingData.TryGetValue("Header", out var headerObject)) return null;
+        if (!context.BindingContext.BindingData.TryGetValue("Headers", out var headerObject)) return null;
         if (headerObject is not string headerString) return null;
 
         var headerDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(headerString);

@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using LWS_Auth.Attributes;
@@ -47,6 +48,34 @@ public class AccountHttpTrigger
         {
             ResultType.DataConflicts => await req.CreateObjectResult("", HttpStatusCode.Conflict),
             ResultType.Success => await req.CreateObjectResult("", HttpStatusCode.OK),
+            _ => await req.CreateObjectResult("", HttpStatusCode.InternalServerError)
+        };
+    }
+
+    [Function("AccountHttpTrigger.GetAccountInfoAsync")]
+    [LwsAuthorize(RequestRole = AccountRole.User)]
+    public async Task<HttpResponseData> GetAccountInfoAsync(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "account")]
+        HttpRequestData req,
+        FunctionContext context
+    )
+    {
+        var accountId = context.GetAccountId();
+        if (string.IsNullOrEmpty(accountId))
+        {
+            return await req.CreateObjectResult("", HttpStatusCode.Unauthorized);
+        }
+
+        var accountGotResult = await _accountService.GetAccountInfoAsync(accountId);
+        return accountGotResult.ResultType switch
+        {
+            ResultType.Success => await req.CreateObjectResult(new
+            {
+                UserNickName = accountGotResult.Result.UserNickName,
+                AccountRole = accountGotResult.Result.AccountRoles.First().ToString(),
+                FirstLetter = accountGotResult.Result.UserNickName.ToUpper().First()
+            }, HttpStatusCode.OK),
+            ResultType.DataNotFound => await req.CreateObjectResult(accountGotResult, HttpStatusCode.NotFound),
             _ => await req.CreateObjectResult("", HttpStatusCode.InternalServerError)
         };
     }

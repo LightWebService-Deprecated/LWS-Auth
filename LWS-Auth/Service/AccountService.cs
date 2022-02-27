@@ -60,6 +60,24 @@ public class AccountService
         };
     }
 
+    public async Task<InternalCommunication<Account>> GetAccountInfoAsync(string userId)
+    {
+        var account = await _accountRepository.GetAccountByIdAsync(userId);
+        if (account == null)
+        {
+            return new InternalCommunication<Account>
+            {
+                ResultType = ResultType.DataNotFound,
+                Message = "Cannot find data corresponding userId!"
+            };
+        }
+
+        return new InternalCommunication<Account>
+        {
+            ResultType = ResultType.Success,
+            Result = account
+        };
+    }
 
     private bool CheckPasswordCorrect(string plainPassword, string hashedPassword)
     {
