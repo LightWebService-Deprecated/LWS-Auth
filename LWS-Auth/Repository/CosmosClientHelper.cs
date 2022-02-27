@@ -33,8 +33,12 @@ public static class CosmosClientHelper
             PartitionKeyPath = "/UserEmail",
             Id = cosmosConfiguration.AccountContainerName
         });
-        await createdDatabase.Database.CreateContainerIfNotExistsAsync(cosmosConfiguration.AccessTokenContainerName,
-            "/UserId");
+        await createdDatabase.Database.CreateContainerIfNotExistsAsync(new ContainerProperties
+        {
+            PartitionKeyPath = "/UserId",
+            Id = cosmosConfiguration.AccessTokenContainerName,
+            DefaultTimeToLive = 60 * 30
+        });
 
         return cosmosClient;
     }
