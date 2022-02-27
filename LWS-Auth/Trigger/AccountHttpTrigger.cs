@@ -15,11 +15,14 @@ namespace LWS_Auth.Trigger;
 public class AccountHttpTrigger
 {
     private readonly AccountService _accountService;
+    private readonly AccessTokenService _accessTokenService;
     private readonly ILogger _logger;
 
-    public AccountHttpTrigger(AccountService accountService, ILogger<AccountHttpTrigger> logger)
+    public AccountHttpTrigger(AccountService accountService, AccessTokenService accessTokenService,
+        ILogger<AccountHttpTrigger> logger)
     {
         _accountService = accountService;
+        _accessTokenService = accessTokenService;
         _logger = logger;
     }
 
@@ -44,5 +47,21 @@ public class AccountHttpTrigger
             ResultType.Success => await req.CreateObjectResult("", HttpStatusCode.OK),
             _ => await req.CreateObjectResult("", HttpStatusCode.InternalServerError)
         };
+    }
+
+    [Function("AccountHttpTrigger.LoginAsync")]
+    public async Task<HttpResponseData> LoginAsync(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "account/login")]
+        HttpRequestData req)
+    {
+        var loginRequest = req.GetBodyAsAsync<LoginRequest>();
+        var loginResult = await _accountService.LoginAccount(loginRequest);
+        if (loginResult.ResultType != ResultType.Success)
+        {
+            return await req.CreateObjectResult(loginResult, HttpStatusCode.Forbidden);
+        }
+
+        return await req.CreateObjectResult(await _accessTokenService.CreateAccessTokenAsync(loginResult.Result.Id),
+            HttpStatusCode.OK);
     }
 }

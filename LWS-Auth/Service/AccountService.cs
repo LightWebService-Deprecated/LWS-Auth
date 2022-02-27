@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using LWS_Auth.Models;
 using LWS_Auth.Models.Inner;
 using LWS_Auth.Models.Request;
 using LWS_Auth.Repository;
@@ -29,5 +30,48 @@ public class AccountService
         await _accountRepository.CreateAccountAsync(registerRequest.ToUserAccount());
 
         return new InternalCommunication<object> {ResultType = ResultType.Success};
+    }
+
+    public async Task<InternalCommunication<Account>> LoginAccount(LoginRequest loginRequest)
+    {
+        var account = await _accountRepository.GetAccountByEmailAsync(loginRequest.UserEmail);
+        if (account == null)
+        {
+            return new InternalCommunication<Account>
+            {
+                ResultType = ResultType.DataNotFound,
+                Message = "Login failed! Please check email or id."
+            };
+        }
+
+        if (!CheckPasswordCorrect(loginRequest.UserPassword, account.UserPassword))
+        {
+            return new InternalCommunication<Account>
+            {
+                ResultType = ResultType.DataNotFound,
+                Message = "Login failed! Please check email or id."
+            };
+        }
+
+        return new InternalCommunication<Account>
+        {
+            Result = account,
+            ResultType = ResultType.Success
+        };
+    }
+
+
+    private bool CheckPasswordCorrect(string plainPassword, string hashedPassword)
+    {
+        bool correct = false;
+        try
+        {
+            correct = BCrypt.Net.BCrypt.Verify(plainPassword, hashedPassword);
+        }
+        catch
+        {
+        }
+
+        return correct;
     }
 }

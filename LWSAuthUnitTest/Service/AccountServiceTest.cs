@@ -95,4 +95,84 @@ public class AccountServiceTest
         Assert.NotNull(result);
         Assert.Equal(ResultType.Success, result.ResultType);
     }
+
+    [Fact(DisplayName =
+        "LoginAccount: LoginAccount should return InternalCommunication with result DataNotFound if userEmail is wrong.")]
+    public async Task Is_LoginAccount_Returns_InternalCommunication_DataNotFound_If_UserEmail_Is_Wrong()
+    {
+        // Let
+        var loginRequest = new LoginRequest
+        {
+            UserEmail = "testUserEmail@test.com",
+            UserPassword = "helloworld"
+        };
+        _mockAccountRepository.Setup(a => a.GetAccountByEmailAsync(loginRequest.UserEmail))
+            .ReturnsAsync(value: null);
+
+        // Do
+        var loginResult = await AccountService.LoginAccount(loginRequest);
+
+        // Verify
+        _mockAccountRepository.VerifyAll();
+
+        // Check
+        Assert.NotNull(loginResult);
+        Assert.Equal(ResultType.DataNotFound, loginResult.ResultType);
+    }
+
+    [Fact(DisplayName =
+        "LoginAccount: LoginAccount should return InternalCommunication with result DataNotFound if userPassword is wrong.")]
+    public async Task Is_LoginAccount_Returns_InternalCommunication_DataNotFound_If_UserPassword_Wrong()
+    {
+        // Let
+        var loginRequest = new LoginRequest
+        {
+            UserEmail = "testUserEmail@test.com",
+            UserPassword = "helloworld"
+        };
+        _mockAccountRepository.Setup(a => a.GetAccountByEmailAsync(loginRequest.UserEmail))
+            .ReturnsAsync(new Account
+            {
+                UserEmail = loginRequest.UserEmail,
+                UserPassword = "asdl;kasl;dfal;sdjl;asdf;"
+            });
+
+        // Do
+        var loginResult = await AccountService.LoginAccount(loginRequest);
+
+        // Verify
+        _mockAccountRepository.VerifyAll();
+
+        // Check
+        Assert.NotNull(loginResult);
+        Assert.Equal(ResultType.DataNotFound, loginResult.ResultType);
+    }
+
+    [Fact(DisplayName =
+        "LoginAccount: LoginAccount should return InternalCommunication with result Success when login succeeds.")]
+    public async Task Is_LoginAccount_Works_Well()
+    {
+        // Let
+        var loginRequest = new LoginRequest
+        {
+            UserEmail = "testUserEmail@test.com",
+            UserPassword = "helloworld"
+        };
+        _mockAccountRepository.Setup(a => a.GetAccountByEmailAsync(loginRequest.UserEmail))
+            .ReturnsAsync(new Account
+            {
+                UserEmail = loginRequest.UserEmail,
+                UserPassword = BCrypt.Net.BCrypt.HashPassword(loginRequest.UserPassword)
+            });
+
+        // Do
+        var loginResult = await AccountService.LoginAccount(loginRequest);
+
+        // Verify
+        _mockAccountRepository.VerifyAll();
+
+        // Check
+        Assert.NotNull(loginResult);
+        Assert.Equal(ResultType.Success, loginResult.ResultType);
+    }
 }

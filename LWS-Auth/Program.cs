@@ -33,10 +33,12 @@ namespace LWS_Auth
 
             // Add Scoped Service(Mostly Business Logic)
             serviceCollection.AddScoped<AccountService>();
+            serviceCollection.AddScoped<AccessTokenService>();
 
             // Add Singleton Service(Mostly Data Logic)
             serviceCollection.AddSingleton<MongoContext>();
             serviceCollection.AddSingleton<IAccountRepository, AccountRepository>();
+            serviceCollection.AddSingleton<IAccessTokenRepository, AccessTokenRepository>();
         }
     }
 }
