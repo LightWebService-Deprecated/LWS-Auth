@@ -190,6 +190,32 @@ public class AccountHttpTriggerTest : IDisposable
         // Check
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
+
+    [Fact(DisplayName =
+        "DELETE /api/account (Dropout) Should return unauthorized result if there is no token provided")]
+    public async Task Is_Dropout_Return_Unauthorized_Result_If_There_Is_No_Token_Provided()
+    {
+        // Do
+        var response = await _httpClient.DeleteAsync("/api/account");
+        
+        // Check
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact(DisplayName = "DELETE /api/account (Dropout) should return OK when dropping out succeeds.")]
+    public async Task Is_Dropout_Returns_OK_If_Dropout_Succeeds()
+    {
+        // Let
+        var (registerRequest, accessToken) = await RegisterAndLoginAsync();
+        
+        // Do
+        _httpClient.DefaultRequestHeaders.Add("X-LWS-AUTH", accessToken.Id);
+        var response = await _httpClient.DeleteAsync("/api/account");
+        _httpClient.DefaultRequestHeaders.Clear();
+        
+        // Check
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
     
     public void Dispose()
     {

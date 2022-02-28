@@ -224,4 +224,55 @@ public class AccountServiceTest
         Assert.Equal(testAccount.AccountRoles, result.Result.AccountRoles);
         Assert.Equal(testAccount.UserNickName, result.Result.UserNickName);
     }
+
+    [Fact(DisplayName =
+        "RemoveAccountAsync: RemoveAccountAsync should return DataNotFound if corresponding account does not exists.")]
+    public async Task Is_RemoveAccountAsync_Returns_DataNotFound_When_Corresponding_Account_Does_Not_Exists()
+    {
+        // Let
+        var userId = "testUserId";
+        _mockAccountRepository.Setup(a => a.GetAccountByIdAsync(userId))
+            .ReturnsAsync(value: null);
+        
+        // Do
+        var response = await AccountService.RemoveAccountAsync(userId);
+        
+        // Verify
+        _mockAccountRepository.VerifyAll();
+        
+        // Check
+        Assert.NotNull(response);
+        Assert.Equal(ResultType.DataNotFound, response.ResultType);
+    }
+
+    [Fact(DisplayName =
+        "RemoveAccountAsync: RemoveAccountAsync should return internalCommunication with success if removing account succeeds.")]
+    public async Task Is_RemoveAccountAsync_Returns_InternalCommunication_Success_When_Remove_Succeeds()
+    {
+        // Let
+        var account = new Account
+        {
+            Id = "testUserId",
+            UserEmail = "test@test.com",
+            UserPassword = "testPasasdfasdf",
+            UserNickName = "test"
+        };
+        _mockAccountRepository.Setup(a => a.GetAccountByIdAsync(account.Id))
+            .ReturnsAsync(value: account);
+        _mockAccountRepository.Setup(a => a.RemoveAccountAsync(It.IsAny<Account>()))
+            .Callback((Account inputAccount) =>
+            {
+                Assert.Equal(account.Id, inputAccount.Id);
+                Assert.Equal(account.UserEmail, account.UserEmail);
+                Assert.Equal(account.UserPassword, account.UserPassword);
+                Assert.Equal(account.UserNickName, account.UserNickName);
+            });
+        
+        // Do
+        var response = await AccountService.RemoveAccountAsync(account.Id);
+        
+        // Check
+        Assert.NotNull(response);
+        Assert.Equal(ResultType.Success, response.ResultType);
+    }
 }

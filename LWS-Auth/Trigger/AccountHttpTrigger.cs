@@ -95,4 +95,26 @@ public class AccountHttpTrigger
         return await req.CreateObjectResult(await _accessTokenService.CreateAccessTokenAsync(loginResult.Result.Id),
             HttpStatusCode.OK);
     }
+    
+    [Function("AccountHttpTrigger.DropoutAsync")]
+    [LwsAuthorize(RequestRole = AccountRole.User)]
+    public async Task<HttpResponseData> DropoutAsync(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "account")]
+        HttpRequestData req,
+        FunctionContext context)
+    {
+        var accountId = context.GetAccountId();
+        if (string.IsNullOrEmpty(accountId))
+        {
+            return await req.CreateObjectResult("", HttpStatusCode.Unauthorized);
+        }
+
+        var removeResult = await _accountService.RemoveAccountAsync(accountId);
+        return removeResult.ResultType switch
+        {
+            ResultType.Success => await req.CreateObjectResult("", HttpStatusCode.OK),
+            ResultType.DataNotFound => await req.CreateObjectResult("", HttpStatusCode.NotFound),
+            _ => await req.CreateObjectResult("", HttpStatusCode.InternalServerError)
+        };
+    }
 }

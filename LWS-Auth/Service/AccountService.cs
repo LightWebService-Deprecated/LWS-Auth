@@ -79,6 +79,26 @@ public class AccountService
         };
     }
 
+    public async Task<InternalCommunication<object>> RemoveAccountAsync(string userId)
+    {
+        var account = await _accountRepository.GetAccountByIdAsync(userId);
+        if (account == null)
+        {
+            return new InternalCommunication<object>
+            {
+                ResultType = ResultType.DataNotFound,
+                Message = "Cannot find data corresponding userId!"
+            };
+        }
+
+        await _accountRepository.RemoveAccountAsync(account);
+
+        return new InternalCommunication<object>
+        {
+            ResultType = ResultType.Success
+        };
+    }
+
     private bool CheckPasswordCorrect(string plainPassword, string hashedPassword)
     {
         bool correct = false;
