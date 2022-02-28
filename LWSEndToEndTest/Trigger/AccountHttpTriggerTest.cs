@@ -15,26 +15,22 @@ using Xunit;
 
 namespace LWSEndToEndTest.Trigger;
 
+[Collection("Cosmos")]
 public class AccountHttpTriggerTest : IDisposable
 {
     private readonly DockerHelper _dockerHelper;
     private readonly CosmosConfiguration _cosmosConfiguration;
-    private readonly CosmosClient _cosmosClient;
     private readonly HttpClient _httpClient;
 
-    public AccountHttpTriggerTest()
+    public AccountHttpTriggerTest(CosmosFixture cosmosFixture)
     {
         _dockerHelper = new DockerHelper();
-        _cosmosConfiguration = new CosmosConfiguration
-        {
-            ConnectionString = Environment.GetEnvironmentVariable("INTEGRATION_COSMOS_CONNECTION"),
-            CosmosDbname = Guid.NewGuid().ToString(),
-            AccountContainerName = "Accounts",
-            AccessTokenContainerName = "AccessTokens"
-        };
+        _cosmosConfiguration = cosmosFixture.TestCosmosConfiguration;
 
-        _cosmosClient = CosmosClientHelper.CreateCosmosClient(_cosmosConfiguration)
-            .GetAwaiter().GetResult();
+        cosmosFixture.CreateAccountContainerAsync(_cosmosConfiguration.AccountContainerName)
+            .Wait();
+        cosmosFixture.CreateAccessTokenContainerAsync(_cosmosConfiguration.AccessTokenContainerName)
+            .Wait();
 
         _dockerHelper.CreateContainerAsync(new Dictionary<string, object>
         {
@@ -171,7 +167,7 @@ public class AccountHttpTriggerTest : IDisposable
     {
         // do
         var response = await _httpClient.GetAsync("/api/account");
-        
+
         // Check
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -181,12 +177,12 @@ public class AccountHttpTriggerTest : IDisposable
     {
         // Login
         var (registerRequest, accessToken) = await RegisterAndLoginAsync();
-        
+
         // Do
         _httpClient.DefaultRequestHeaders.Add("X-LWS-AUTH", accessToken.Id);
         var response = await _httpClient.GetAsync("/api/account");
         _httpClient.DefaultRequestHeaders.Clear();
-        
+
         // Check
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -197,7 +193,7 @@ public class AccountHttpTriggerTest : IDisposable
     {
         // Do
         var response = await _httpClient.DeleteAsync("/api/account");
-        
+
         // Check
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -207,24 +203,20 @@ public class AccountHttpTriggerTest : IDisposable
     {
         // Let
         var (registerRequest, accessToken) = await RegisterAndLoginAsync();
-        
+
         // Do
         _httpClient.DefaultRequestHeaders.Add("X-LWS-AUTH", accessToken.Id);
         var response = await _httpClient.DeleteAsync("/api/account");
         _httpClient.DefaultRequestHeaders.Clear();
-        
+
         // Check
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
-    
+
     public void Dispose()
     {
         _dockerHelper.DestroyContainerAsync().Wait();
         _dockerHelper.Dispose();
-
-        _cosmosClient.GetDatabase(_cosmosConfiguration.CosmosDbname)
-            .DeleteAsync()
-            .Wait();
     }
 
     private async Task<(RegisterRequest, AccessToken)> RegisterAndLoginAsync()
