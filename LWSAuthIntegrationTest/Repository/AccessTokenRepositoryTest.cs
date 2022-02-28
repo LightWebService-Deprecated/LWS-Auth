@@ -9,7 +9,8 @@ using Xunit;
 
 namespace LWSAuthIntegrationTest.Repository;
 
-public class AccessTokenRepositoryTest : CosmosDatabaseHelper
+[Collection("Cosmos")]
+public class AccessTokenRepositoryTest
 {
     private readonly IAccessTokenRepository _accessTokenRepository;
     private readonly Container _accessToken;
@@ -20,11 +21,16 @@ public class AccessTokenRepositoryTest : CosmosDatabaseHelper
         UserId = "testUserId"
     };
 
-    public AccessTokenRepositoryTest()
+    public AccessTokenRepositoryTest(CosmosFixture cosmosFixture)
     {
-        _accessTokenRepository = new AccessTokenRepository(CosmosClient, CosmosConfiguration);
-        _accessToken = CosmosClient.GetContainer(CosmosConfiguration.CosmosDbname,
-            CosmosConfiguration.AccessTokenContainerName);
+        var configuration = cosmosFixture.TestCosmosConfiguration;
+        _accessTokenRepository =
+            new AccessTokenRepository(cosmosFixture.CosmosClient, configuration);
+
+        cosmosFixture.CreateAccessTokenContainerAsync(configuration.AccessTokenContainerName)
+            .Wait();
+        _accessToken = cosmosFixture.CosmosClient.GetContainer(configuration.CosmosDbname,
+            configuration.AccessTokenContainerName);
     }
 
     private async Task<List<AccessToken>> ListAccessTokenAsync()

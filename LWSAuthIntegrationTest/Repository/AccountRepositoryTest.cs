@@ -10,7 +10,8 @@ using Xunit;
 
 namespace LWSAuthIntegrationTest.Repository;
 
-public class AccountRepositoryTest : CosmosDatabaseHelper
+[Collection("Cosmos")]
+public class AccountRepositoryTest
 {
     private readonly IAccountRepository _accountRepository;
     private readonly Container _accountContainer;
@@ -24,12 +25,17 @@ public class AccountRepositoryTest : CosmosDatabaseHelper
         AccountRoles = new HashSet<AccountRole> {AccountRole.Admin}
     };
 
-    public AccountRepositoryTest()
+    public AccountRepositoryTest(CosmosFixture cosmosFixture)
     {
-        _accountContainer =
-            CosmosClient.GetContainer(CosmosConfiguration.CosmosDbname, CosmosConfiguration.AccountContainerName);
+        var configuration = cosmosFixture.TestCosmosConfiguration;
 
-        _accountRepository = new AccountRepository(CosmosClient, CosmosConfiguration);
+        cosmosFixture.CreateAccountContainerAsync(configuration.AccountContainerName)
+            .Wait();
+
+        _accountContainer =
+            cosmosFixture.CosmosClient.GetContainer(configuration.CosmosDbname, configuration.AccountContainerName);
+
+        _accountRepository = new AccountRepository(cosmosFixture.CosmosClient, configuration);
     }
 
     private async Task<List<Account>> GetAccountCollectionAsync()
