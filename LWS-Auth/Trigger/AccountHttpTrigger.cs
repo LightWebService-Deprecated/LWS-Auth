@@ -92,10 +92,11 @@ public class AccountHttpTrigger
             return await req.CreateObjectResult(loginResult, HttpStatusCode.Forbidden);
         }
 
-        return await req.CreateObjectResult(await _accessTokenService.CreateAccessTokenAsync(loginResult.Result.Id),
+        return await req.CreateObjectResult(
+            await _accessTokenService.CreateAccessTokenAsync(loginResult.Result.Id, loginResult.Result.AccountRoles),
             HttpStatusCode.OK);
     }
-    
+
     [Function("AccountHttpTrigger.DropoutAsync")]
     [LwsAuthorize(RequestRole = AccountRole.User)]
     public async Task<HttpResponseData> DropoutAsync(

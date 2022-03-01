@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using LWS_Auth.Models;
 using LWS_Auth.Repository;
@@ -29,10 +31,12 @@ public class AccessTokenServiceTest
                 Assert.NotNull(accessToken);
                 Assert.NotNull(accessToken.Id);
                 Assert.Equal(userId, accessToken.UserId);
+                Assert.Single(accessToken.Roles);
+                Assert.Equal(AccountRole.Admin, accessToken.Roles.First());
             });
 
         // Do
-        await AccessTokenService.CreateAccessTokenAsync(userId);
+        await AccessTokenService.CreateAccessTokenAsync(userId, new HashSet<AccountRole> {AccountRole.Admin});
 
         // Verify
         _accessTokenRepository.VerifyAll();

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,7 +17,7 @@ public class AccessTokenService
         _accessTokenRepository = accessTokenRepository;
     }
 
-    public async Task<AccessToken> CreateAccessTokenAsync(string userId)
+    public async Task<AccessToken> CreateAccessTokenAsync(string userId, HashSet<AccountRole> roles)
     {
         using var shaManaged = new SHA512Managed();
         var targetString = $"{DateTime.UtcNow.Ticks}/{userId}/{Guid.NewGuid().ToString()}";
@@ -26,7 +27,8 @@ public class AccessTokenService
         var accessToken = new AccessToken
         {
             Id = BitConverter.ToString(result).Replace("-", string.Empty),
-            UserId = userId
+            UserId = userId,
+            Roles = roles
         };
 
         await _accessTokenRepository.InsertAccessTokenAsync(accessToken);

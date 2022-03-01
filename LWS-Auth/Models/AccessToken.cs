@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace LWS_Auth.Models;
@@ -14,4 +15,9 @@ public class AccessToken
     /// Shard Key - UserId
     /// </summary>
     public string UserId { get; set; }
+
+    /// <summary>
+    /// Access Token Roles
+    /// </summary>
+    public HashSet<AccountRole> Roles { get; set; }
 }
