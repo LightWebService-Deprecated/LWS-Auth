@@ -37,6 +37,10 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
         LwsAuthorizeAttribute declaredAttribute)
     {
         var account = await _accessTokenRepository.GetAccessTokenByTokenAsync(token);
-        context.SetAccountId(account?.UserId);
+
+        if (account?.Roles.Contains(declaredAttribute.RequestRole) == true)
+        {
+            context.SetAccountId(account.UserId);
+        }
     }
 }
