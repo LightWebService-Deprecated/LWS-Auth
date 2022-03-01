@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Microsoft.Azure.Functions.Worker;
+using Newtonsoft.Json;
 
 namespace LWS_Auth.Extension;
 
@@ -29,5 +31,17 @@ public static class FunctionContextExtensions
         if (!functionContext.Items.TryGetValue("accountId", out var accountId)) return null;
 
         return (string) accountId;
+    }
+
+    public static string TryGetTokenFromHeaders(this FunctionContext context)
+    {
+        if (!context.BindingContext.BindingData.TryGetValue("Headers", out var headerObject)) return null;
+        if (headerObject is not string headerString) return null;
+
+        var headerDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(headerString);
+        if (headerDictionary == null) return null;
+
+        var token = headerDictionary.GetValueOrDefault("X-LWS-AUTH");
+        return token;
     }
 }
