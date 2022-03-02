@@ -1,0 +1,43 @@
+name: dotnet test
+
+on: [push]
+
+env:
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'    # set this to the path to your web app project, defaults to the repository root
+
+jobs:
+  RunUnitTest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet-version: ['6.x']
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore LWSAuthUnitTest/LWSAuthUnitTest.csproj
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal LWSAuthUnitTest/LWSAuthUnitTest.csproj
+
+  RunIntegrationTest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet-version: ['6.x']
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore LWSAuthIntegrationTest/LWSAuthIntegrationTest.csproj
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal --logger:"console;verbosity=normal" LWSAuthIntegrationTest/LWSAuthIntegrationTest.csproj 
