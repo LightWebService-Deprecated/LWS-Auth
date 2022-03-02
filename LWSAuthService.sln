@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LWSAuthService", "LWSAuthService\LWSAuthService.csproj", "{552A1D5E-F14F-4EFC-AAEE-236B5CCE419D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LWSAuthUnitTest", "LWSAuthUnitTest\LWSAuthUnitTest.csproj", "{0AC190B7-0C7F-4134-862A-926DACF4D0C7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LWSAuthIntegrationTest", "LWSAuthIntegrationTest\LWSAuthIntegrationTest.csproj", "{8D3C578E-1C45-42BF-A759-51CB38E6639E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{552A1D5E-F14F-4EFC-AAEE-236B5CCE419D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{552A1D5E-F14F-4EFC-AAEE-236B5CCE419D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{552A1D5E-F14F-4EFC-AAEE-236B5CCE419D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{552A1D5E-F14F-4EFC-AAEE-236B5CCE419D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0AC190B7-0C7F-4134-862A-926DACF4D0C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AC190B7-0C7F-4134-862A-926DACF4D0C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AC190B7-0C7F-4134-862A-926DACF4D0C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AC190B7-0C7F-4134-862A-926DACF4D0C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D3C578E-1C45-42BF-A759-51CB38E6639E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D3C578E-1C45-42BF-A759-51CB38E6639E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D3C578E-1C45-42BF-A759-51CB38E6639E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D3C578E-1C45-42BF-A759-51CB38E6639E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
