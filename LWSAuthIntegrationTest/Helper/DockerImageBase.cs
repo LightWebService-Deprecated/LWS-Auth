@@ -31,6 +31,15 @@ public abstract class DockerImageBase
         return list.Any(a => a.RepoTags.Contains(FullImageName));
     }
 
+    protected async Task<bool> CheckImageExists(string fullImageName)
+    {
+        var list = await DockerClient.Images.ListImagesAsync(new ImagesListParameters
+        {
+            All = true
+        });
+        return list.Any(a => a.RepoTags.Contains(fullImageName));
+    }
+
     public abstract Task CreateContainerAsync();
     public abstract Task RunContainerAsync();
     public abstract Task RemoveContainerAsync();

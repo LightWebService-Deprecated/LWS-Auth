@@ -1,4 +1,5 @@
 using LWSAuthService.Models;
+using LWSAuthService.Models.Event;
 using LWSAuthService.Models.Inner;
 using LWSAuthService.Models.Request;
 using LWSAuthService.Repository;
@@ -8,10 +9,12 @@ namespace LWSAuthService.Service;
 public class AccountService
 {
     private readonly IAccountRepository _accountRepository;
+    private readonly IEventRepository _eventRepository;
 
-    public AccountService(IAccountRepository accountRepository)
+    public AccountService(IAccountRepository accountRepository, IEventRepository eventRepository)
     {
         _accountRepository = accountRepository;
+        _eventRepository = eventRepository;
     }
 
     public async Task<InternalCommunication<object>> CreateNewAccount(RegisterRequest registerRequest)
@@ -26,7 +29,12 @@ public class AccountService
             };
         }
 
-        await _accountRepository.CreateAccountAsync(registerRequest.ToUserAccount());
+        var createdAccount = await _accountRepository.CreateAccountAsync(registerRequest.ToUserAccount());
+        await _eventRepository.SendMessageToTopicAsync("account.created", new AccountCreatedMessage
+        {
+            AccountId = createdAccount.Id,
+            CreatedAt = DateTimeOffset.Now
+        });
 
         return new InternalCommunication<object> {ResultType = ResultType.Success};
     }

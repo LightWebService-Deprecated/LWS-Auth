@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LWSAuthService.Models;
+using LWSAuthService.Models.Event;
 using LWSAuthService.Models.Inner;
 using LWSAuthService.Models.Request;
 using LWSAuthService.Repository;
@@ -15,13 +16,16 @@ public class AccountServiceTest
 {
     // Dependencies
     private readonly Mock<IAccountRepository> _mockAccountRepository;
+    private readonly Mock<IEventRepository> _mockEventRepository;
 
     // Target object
-    private AccountService AccountService => new AccountService(_mockAccountRepository.Object);
+    private AccountService AccountService =>
+        new AccountService(_mockAccountRepository.Object, _mockEventRepository.Object);
 
     public AccountServiceTest()
     {
         _mockAccountRepository = new Mock<IAccountRepository>();
+        _mockEventRepository = new Mock<IEventRepository>();
     }
 
     private bool CheckPasswordCorrect(string plainPassword, string hashedPassword)
@@ -74,6 +78,8 @@ public class AccountServiceTest
             UserPassword = "testPassword",
             UserNickName = "testNickName"
         };
+        var accountTest = registerRequest.ToUserAccount();
+        accountTest.Id = "testId";
         _mockAccountRepository.Setup(a => a.GetAccountByEmailAsync(registerRequest.UserEmail))
             .ReturnsAsync(value: null);
         _mockAccountRepository.Setup(a => a.CreateAccountAsync(It.IsAny<Account>()))
@@ -84,6 +90,17 @@ public class AccountServiceTest
                 Assert.True(CheckPasswordCorrect(registerRequest.UserPassword, account.UserPassword));
                 Assert.Single(account.AccountRoles);
                 Assert.Equal(AccountRole.User, account.AccountRoles.First());
+            })
+            .ReturnsAsync(accountTest);
+        _mockEventRepository.Setup(a => a.SendMessageToTopicAsync("account.created", It.IsAny<AccountCreatedMessage>()))
+            .Callback((string topic, object objMessage) =>
+            {
+                Assert.NotNull(objMessage);
+                Assert.True(objMessage is AccountCreatedMessage);
+                var message = objMessage as AccountCreatedMessage;
+                Assert.NotNull(message);
+                Assert.Equal(accountTest.Id, message.AccountId);
+                Assert.NotNull(message.CreatedAt);
             });
 
         // Do
@@ -91,6 +108,7 @@ public class AccountServiceTest
 
         // Verify
         _mockAccountRepository.VerifyAll();
+        _mockEventRepository.VerifyAll();
 
         // Check
         Assert.NotNull(result);

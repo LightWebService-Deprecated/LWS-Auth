@@ -6,7 +6,7 @@ namespace LWSAuthService.Repository;
 
 public interface IAccountRepository
 {
-    public Task CreateAccountAsync(Account account);
+    public Task<Account> CreateAccountAsync(Account account);
     public Task<Account?> GetAccountByIdAsync(string userId);
     public Task<Account?> GetAccountByEmailAsync(string userEmail);
     public Task UpdateAccountAsync(Account account);
@@ -23,9 +23,10 @@ public class AccountRepository : IAccountRepository
         _accountCollection = mongoContext.AccountCollection;
     }
 
-    public async Task CreateAccountAsync(Account account)
+    public async Task<Account> CreateAccountAsync(Account account)
     {
         await _accountCollection.InsertOneAsync(account);
+        return account;
     }
 
     public async Task<Account?> GetAccountByIdAsync(string userId)

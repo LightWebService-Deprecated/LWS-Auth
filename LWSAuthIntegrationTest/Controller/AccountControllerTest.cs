@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -28,7 +27,11 @@ public class AccountControllerTest
         _applicationFactory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
-                builder.ConfigureServices(service => { service.AddSingleton(_mongoConfiguration); });
+                builder.ConfigureServices(service =>
+                {
+                    service.AddSingleton(_mongoConfiguration);
+                    service.AddSingleton(mongoDbFixture.TestProducerConfig);
+                });
             });
         _httpClient = _applicationFactory.CreateClient();
     }

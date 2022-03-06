@@ -1,3 +1,4 @@
+using Confluent.Kafka;
 using LWSAuthService.Configuration;
 using LWSAuthService.Repository;
 using LWSAuthService.Service;
@@ -7,7 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 var targetSection = builder.Configuration.GetSection("MongoSection").Get<MongoConfiguration>();
+var kafkaSection = builder.Configuration.GetSection("KafkaProducerConfig").Get<ProducerConfig>();
 builder.Services.AddSingleton(targetSection);
+builder.Services.AddSingleton(kafkaSection);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -21,6 +24,7 @@ builder.Services.AddScoped<AccessTokenService>();
 builder.Services.AddSingleton<MongoContext>();
 builder.Services.AddSingleton<IAccountRepository, AccountRepository>();
 builder.Services.AddSingleton<IAccessTokenRepository, AccessTokenRepository>();
+builder.Services.AddSingleton<IEventRepository, EventRepository>();
 
 var app = builder.Build();
 
