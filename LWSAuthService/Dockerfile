@@ -9,10 +9,10 @@ COPY ["LWSAuthService/LWSAuthService.csproj", "LWSAuthService/"]
 RUN dotnet restore "LWSAuthService/LWSAuthService.csproj"
 COPY . .
 WORKDIR "/src/LWSAuthService"
-RUN dotnet build "LWSAuthService.csproj" -c Release -o /app/build
+RUN dotnet build "LWSAuthService.csproj" -c Debug -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "LWSAuthService.csproj" -c Release -o /app/publish
+RUN dotnet publish "LWSAuthService.csproj" -c Debug -o /app/publish
 
 FROM base AS final
 WORKDIR /app
