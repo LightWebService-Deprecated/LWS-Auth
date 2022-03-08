@@ -2,6 +2,7 @@ using Confluent.Kafka;
 using LWSAuthService.Configuration;
 using LWSAuthService.Repository;
 using LWSAuthService.Service;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +37,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseMetricServer();
+app.UseHttpMetrics();
 
 app.UseAuthorization();
 
