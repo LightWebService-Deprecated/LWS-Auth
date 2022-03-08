@@ -2,6 +2,7 @@ using Confluent.Kafka;
 using LWSAuthService.Configuration;
 using LWSAuthService.Repository;
 using LWSAuthService.Service;
+using Microsoft.Extensions.Options;
 using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,17 @@ builder.Services.AddSingleton<IAccountRepository, AccountRepository>();
 builder.Services.AddSingleton<IAccessTokenRepository, AccessTokenRepository>();
 builder.Services.AddSingleton<IEventRepository, EventRepository>();
 
+// Services
+builder.Services.AddCors(option =>
+{
+    option.AddPolicy(name: "AllowAny", policy =>
+    {
+        policy.AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowAnyOrigin();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -40,6 +52,8 @@ app.UseHttpsRedirection();
 
 app.UseMetricServer();
 app.UseHttpMetrics();
+
+app.UseCors("AllowAny");
 
 app.UseAuthorization();
 
