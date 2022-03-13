@@ -41,4 +41,19 @@ public class AccessTokenServiceTest
         // Verify
         _accessTokenRepository.VerifyAll();
     }
+
+    [Fact(DisplayName =
+        "RemoveAccountAccessTokenAsync: RemoveAccountAccessTokenAsync should call repository's bulk remove action")]
+    public async Task Is_RemoveAccountAccessTokenAsync_Removes_All_AccessToken()
+    {
+        // Let
+        var userId = "testUserId";
+        _accessTokenRepository.Setup(a => a.BulkRemoveAccessTokenAsync(userId));
+
+        // Do
+        await AccessTokenService.RemoveAccountAccessTokenAsync(userId);
+
+        // Check
+        _accessTokenRepository.VerifyAll();
+    }
 }

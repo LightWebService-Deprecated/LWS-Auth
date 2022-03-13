@@ -103,4 +103,24 @@ public class AccessTokenRepositoryTest
         // Check
         Assert.Equal(3, list.Count);
     }
+
+    [Fact(DisplayName = "BulkRemoveAccessTokenAsync: BulkRemoveAccessTokenAsync should remove all account's token")]
+    public async Task Is_BulkRemoveAccessTokenAsync_Removes_Account_Token()
+    {
+        // Let
+        var toSaveList = new List<AccessToken>
+        {
+            TestAccessToken(),
+            TestAccessToken("hello"),
+            TestAccessToken("another")
+        };
+        await _accessTokenCollection.InsertManyAsync(toSaveList);
+
+        // Do
+        await _accessTokenRepository.BulkRemoveAccessTokenAsync("testUserId");
+
+        // Check
+        var list = await ListAccessTokenAsync();
+        Assert.Empty(list);
+    }
 }

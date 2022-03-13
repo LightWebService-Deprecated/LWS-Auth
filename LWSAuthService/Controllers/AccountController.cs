@@ -79,7 +79,9 @@ public class AccountHttpTrigger : ControllerBase
     [LwsAuthorization(TargetAccountRole = AccountRole.User)]
     public async Task<IActionResult> DropoutAsync()
     {
-        var removeResult = await _accountService.RemoveAccountAsync(HttpContext.Items["accountId"].ToString());
+        var accountId = HttpContext.Items["accountId"].ToString();
+        var removeResult = await _accountService.RemoveAccountAsync(accountId);
+        await _accessTokenService.RemoveAccountAccessTokenAsync(accountId);
         return removeResult.ResultType switch
         {
             ResultType.Success => Ok(),

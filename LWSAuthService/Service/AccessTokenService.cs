@@ -32,4 +32,9 @@ public class AccessTokenService
 
         return accessToken;
     }
+
+    public async Task RemoveAccountAccessTokenAsync(string userId)
+    {
+        await _accessTokenRepository.BulkRemoveAccessTokenAsync(userId);
+    }
 }

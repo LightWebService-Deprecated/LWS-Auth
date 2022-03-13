@@ -7,6 +7,7 @@ using LWSAuthIntegrationTest.TestData;
 using LWSAuthService.Configuration;
 using LWSAuthService.Models;
 using LWSAuthService.Models.Request;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -194,6 +195,25 @@ public class AccountControllerTest
 
         // Check
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact(DisplayName = "DELETE/api/account (Dropout) should clear access token permanently.")]
+    public async Task Is_Dropout_Clears_Access_Token_Permanently()
+    {
+        // Let
+        var (registerRequest, accessToken) = await RegisterAndLoginAsync();
+        _httpClient.DefaultRequestHeaders.Add("X-LWS-AUTH", accessToken.Id);
+        var dropoutResponse = await _httpClient.DeleteAsync("/api/account");
+        _httpClient.DefaultRequestHeaders.Clear();
+        Assert.Equal(HttpStatusCode.OK, dropoutResponse.StatusCode);
+
+        // Do(In this phase, user already dropped out and any other request should return 401)
+        _httpClient.DefaultRequestHeaders.Add("X-LWS-AUTH", accessToken.Id);
+        var response = await _httpClient.GetAsync("/api/account");
+        _httpClient.DefaultRequestHeaders.Clear();
+
+        // Check response is 401 unauthorized
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     private async Task<(RegisterRequest, AccessToken)> RegisterAndLoginAsync()

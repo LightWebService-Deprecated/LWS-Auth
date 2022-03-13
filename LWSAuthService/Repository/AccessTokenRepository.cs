@@ -9,6 +9,7 @@ public interface IAccessTokenRepository
     Task InsertAccessTokenAsync(AccessToken accessToken);
     Task<AccessToken> GetAccessTokenByTokenAsync(string token);
     Task<List<AccessToken>> ListAccessTokensAsync(string userId);
+    Task BulkRemoveAccessTokenAsync(string userId);
 }
 
 public class AccessTokenRepository : IAccessTokenRepository
@@ -36,5 +37,10 @@ public class AccessTokenRepository : IAccessTokenRepository
     {
         return await AccessTokenQueryable.Where(a => a.UserId == userId)
             .ToListAsync();
+    }
+
+    public async Task BulkRemoveAccessTokenAsync(string userId)
+    {
+        await _accessTokenCollection.DeleteManyAsync(a => a.UserId == userId);
     }
 }
