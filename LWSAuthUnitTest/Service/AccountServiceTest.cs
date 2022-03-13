@@ -285,9 +285,22 @@ public class AccountServiceTest
                 Assert.Equal(account.UserPassword, account.UserPassword);
                 Assert.Equal(account.UserNickName, account.UserNickName);
             });
+        _mockEventRepository.Setup(a => a.SendMessageToTopicAsync("account.deleted", It.IsAny<object>()))
+            .Callback((string topic, object messageObject) =>
+            {
+                Assert.True(messageObject is AccountDeletedMessage);
+                var message = messageObject as AccountDeletedMessage;
+                Assert.NotNull(message);
+
+                Assert.Equal(account.Id, message.AccountId);
+            });
 
         // Do
         var response = await AccountService.RemoveAccountAsync(account.Id);
+
+        // Verify
+        _mockAccountRepository.VerifyAll();
+        _mockEventRepository.VerifyAll();
 
         // Check
         Assert.NotNull(response);

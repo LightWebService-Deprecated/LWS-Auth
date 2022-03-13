@@ -98,7 +98,15 @@ public class AccountService
             };
         }
 
+        // Remove Entity
         await _accountRepository.RemoveAccountAsync(account);
+
+        // Send Message to topic
+        await _eventRepository.SendMessageToTopicAsync("account.deleted", new AccountDeletedMessage
+        {
+            AccountId = account.Id,
+            DeletedAt = DateTimeOffset.UtcNow
+        });
 
         return new InternalCommunication<object>
         {
