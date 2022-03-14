@@ -7,7 +7,7 @@ namespace LWSAuthService.Repository;
 public interface IAccessTokenRepository
 {
     Task InsertAccessTokenAsync(AccessToken accessToken);
-    Task<AccessToken> GetAccessTokenByTokenAsync(string token);
+    Task<AccessToken?> GetAccessTokenByTokenAsync(string token);
     Task<List<AccessToken>> ListAccessTokensAsync(string userId);
     Task BulkRemoveAccessTokenAsync(string userId);
 }
@@ -27,7 +27,7 @@ public class AccessTokenRepository : IAccessTokenRepository
         await _accessTokenCollection.InsertOneAsync(accessToken);
     }
 
-    public async Task<AccessToken> GetAccessTokenByTokenAsync(string token)
+    public async Task<AccessToken?> GetAccessTokenByTokenAsync(string token)
     {
         return await AccessTokenQueryable.Where(a => a.Id == token)
             .FirstOrDefaultAsync();

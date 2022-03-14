@@ -216,6 +216,33 @@ public class AccountControllerTest
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    [Fact(DisplayName = "GET /api/auth should return unauthorized if header is not defined")]
+    public async Task Is_GetAuthorizeToken_Returns_Unauthorized_When_Header_Not_Defined()
+    {
+        var response = await _httpClient.GetAsync("/api/auth");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact(DisplayName = "GET /api/auth should return unauthorized if header value is not proper access token.")]
+    public async Task Is_GetAuthorizeToken_Returns_Unauthorized_When_Token_Invalid()
+    {
+        _httpClient.DefaultRequestHeaders.Add("X-LWS-AUTH", "asdfasdfafsd");
+        var response = await _httpClient.GetAsync("/api/auth");
+        _httpClient.DefaultRequestHeaders.Clear();
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact(DisplayName = "GET /api/auth should return ok when token is authorized.")]
+    public async Task Is_GetAuthorizeTokenAsync_Returns_OK()
+    {
+        // Let
+        var (registerRequest, accessToken) = await RegisterAndLoginAsync();
+        _httpClient.DefaultRequestHeaders.Add("X-LWS-AUTH", accessToken.Id);
+        var response = await _httpClient.GetAsync("/api/auth");
+        _httpClient.DefaultRequestHeaders.Clear();
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
     private async Task<(RegisterRequest, AccessToken)> RegisterAndLoginAsync()
     {
         // Let
