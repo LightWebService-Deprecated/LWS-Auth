@@ -7,10 +7,12 @@ namespace LWSAuthService.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAccessTokenRepository _accessTokenRepository;
+    private readonly ILogger _logger;
 
-    public AuthController(IAccessTokenRepository accessTokenRepository)
+    public AuthController(IAccessTokenRepository accessTokenRepository, ILogger<AuthController> logger)
     {
         _accessTokenRepository = accessTokenRepository;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -19,6 +21,7 @@ public class AuthController : ControllerBase
         var header = HttpContext.Request.Headers["X-LWS-AUTH"].FirstOrDefault();
         if (string.IsNullOrEmpty(header))
         {
+            _logger.LogInformation("Auth Header is empty!");
             return Unauthorized();
         }
 
@@ -26,6 +29,7 @@ public class AuthController : ControllerBase
 
         if (accessToken == null)
         {
+            _logger.LogInformation("Access Token is null: {token}", header);
             return Unauthorized();
         }
 
