@@ -53,6 +53,7 @@ public class AccountHttpTrigger : ControllerBase
         {
             ResultType.Success => Ok(new
             {
+                AccountId = accountGotResult.Result.Id,
                 UserNickName = accountGotResult.Result.UserNickName,
                 AccountRole = accountGotResult.Result.AccountRoles.First().ToString(),
                 FirstLetter = accountGotResult.Result.UserNickName.ToUpper().First()
