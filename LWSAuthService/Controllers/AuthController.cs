@@ -1,5 +1,6 @@
 using LWSAuthService.Repository;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace LWSAuthService.Controllers;
 
@@ -29,6 +30,7 @@ public class AuthController : ControllerBase
 
         if (accessToken == null)
         {
+            _logger.LogInformation("Header(JSON): {header}", JsonConvert.SerializeObject(HttpContext.Request.Headers));
             _logger.LogInformation("Access Token is null: {token}", header);
             return Unauthorized();
         }
