@@ -1,30 +1,30 @@
-using Confluent.Kafka;
-using Newtonsoft.Json;
+using LWSEvent.Event.Account;
+using MassTransit;
 
 namespace LWSAuthService.Repository;
 
 public interface IEventRepository
 {
-    Task SendMessageToTopicAsync(string topic, object message);
+    Task PublishAccountCreated(AccountCreatedEvent accountCreatedMessage);
+    Task PublishAccountDeleted(AccountDeletedEvent accountDeletedMessage);
 }
 
-public class EventRepository : IDisposable, IEventRepository
+public class EventRepository : IEventRepository
 {
-    private readonly IProducer<Null, string> _messageProducer;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public EventRepository(ProducerConfig producerConfig)
+    public EventRepository(IPublishEndpoint publishEndpoint)
     {
-        _messageProducer = new ProducerBuilder<Null, string>(producerConfig).Build();
+        _publishEndpoint = publishEndpoint;
     }
 
-    public async Task SendMessageToTopicAsync(string topic, object message)
+    public async Task PublishAccountCreated(AccountCreatedEvent accountCreatedMessage)
     {
-        await _messageProducer.ProduceAsync(topic,
-            new Message<Null, string> {Value = JsonConvert.SerializeObject(message)});
+        await _publishEndpoint.Publish<AccountCreatedEvent>(accountCreatedMessage);
     }
 
-    public void Dispose()
+    public async Task PublishAccountDeleted(AccountDeletedEvent accountDeletedMessage)
     {
-        _messageProducer.Dispose();
+        await _publishEndpoint.Publish<AccountDeletedEvent>(accountDeletedMessage);
     }
 }

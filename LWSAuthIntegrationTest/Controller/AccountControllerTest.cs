@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -7,9 +8,11 @@ using LWSAuthIntegrationTest.TestData;
 using LWSAuthService.Configuration;
 using LWSAuthService.Models;
 using LWSAuthService.Models.Request;
-using Microsoft.AspNetCore.Http;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Xunit;
 
@@ -28,10 +31,23 @@ public class AccountControllerTest
         _applicationFactory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
-                builder.ConfigureServices(service =>
+                builder.ConfigureTestServices(service =>
                 {
                     service.AddSingleton(_mongoConfiguration);
-                    service.AddSingleton(mongoDbFixture.TestProducerConfig);
+
+                    // Remove Any massTransit services
+                    var massTransitServices = service.FirstOrDefault(a =>
+                        a.ServiceType == typeof(IHostedService) && a.ImplementationFactory != null &&
+                        a.ImplementationFactory.Method.ReturnType == typeof(MassTransitHostedService));
+                    service.Remove(massTransitServices);
+                    var massTransitDescriptors = service.Where(a =>
+                        a.ServiceType.Namespace.Contains("MassTransit", StringComparison.OrdinalIgnoreCase)).ToList();
+                    foreach (var eachDescriptor in massTransitDescriptors)
+                    {
+                        service.Remove(eachDescriptor);
+                    }
+
+                    service.AddMassTransit(a => { a.UsingInMemory(); });
                 });
             });
         _httpClient = _applicationFactory.CreateClient();

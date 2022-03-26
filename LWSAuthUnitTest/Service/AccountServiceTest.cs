@@ -2,11 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LWSAuthService.Models;
-using LWSAuthService.Models.Event;
 using LWSAuthService.Models.Inner;
 using LWSAuthService.Models.Request;
 using LWSAuthService.Repository;
 using LWSAuthService.Service;
+using LWSEvent.Event.Account;
 using Moq;
 using Xunit;
 
@@ -92,12 +92,9 @@ public class AccountServiceTest
                 Assert.Equal(AccountRole.User, account.AccountRoles.First());
             })
             .ReturnsAsync(accountTest);
-        _mockEventRepository.Setup(a => a.SendMessageToTopicAsync("account.created", It.IsAny<AccountCreatedMessage>()))
-            .Callback((string topic, object objMessage) =>
+        _mockEventRepository.Setup(a => a.PublishAccountCreated(It.IsAny<AccountCreatedEvent>()))
+            .Callback((AccountCreatedEvent message) =>
             {
-                Assert.NotNull(objMessage);
-                Assert.True(objMessage is AccountCreatedMessage);
-                var message = objMessage as AccountCreatedMessage;
                 Assert.NotNull(message);
                 Assert.Equal(accountTest.Id, message.AccountId);
                 Assert.NotNull(message.CreatedAt);
@@ -285,11 +282,9 @@ public class AccountServiceTest
                 Assert.Equal(account.UserPassword, account.UserPassword);
                 Assert.Equal(account.UserNickName, account.UserNickName);
             });
-        _mockEventRepository.Setup(a => a.SendMessageToTopicAsync("account.deleted", It.IsAny<object>()))
-            .Callback((string topic, object messageObject) =>
+        _mockEventRepository.Setup(a => a.PublishAccountDeleted(It.IsAny<AccountDeletedEvent>()))
+            .Callback((AccountDeletedEvent message) =>
             {
-                Assert.True(messageObject is AccountDeletedMessage);
-                var message = messageObject as AccountDeletedMessage;
                 Assert.NotNull(message);
 
                 Assert.Equal(account.Id, message.AccountId);
