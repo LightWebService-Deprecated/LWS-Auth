@@ -1,8 +1,8 @@
 using LWSAuthService.Models;
-using LWSAuthService.Models.Event;
 using LWSAuthService.Models.Inner;
 using LWSAuthService.Models.Request;
 using LWSAuthService.Repository;
+using LWSEvent.Event.Account;
 
 namespace LWSAuthService.Service;
 
@@ -30,7 +30,7 @@ public class AccountService
         }
 
         var createdAccount = await _accountRepository.CreateAccountAsync(registerRequest.ToUserAccount());
-        await _eventRepository.SendMessageToTopicAsync("account.created", new AccountCreatedMessage
+        await _eventRepository.PublishAccountCreated(new AccountCreatedEvent
         {
             AccountId = createdAccount.Id,
             CreatedAt = DateTimeOffset.Now
@@ -102,7 +102,7 @@ public class AccountService
         await _accountRepository.RemoveAccountAsync(account);
 
         // Send Message to topic
-        await _eventRepository.SendMessageToTopicAsync("account.deleted", new AccountDeletedMessage
+        await _eventRepository.PublishAccountDeleted(new AccountDeletedEvent
         {
             AccountId = account.Id,
             DeletedAt = DateTimeOffset.UtcNow
