@@ -87,16 +87,8 @@ public class MongoDbContainer : DockerImageBase
 
     public override async Task RemoveContainerAsync()
     {
-        var environmentalSettings = Environment.GetEnvironmentVariable("REMOVE_CONTAINER");
-        switch (environmentalSettings)
-        {
-            case null:
-                return;
-            case "true":
-                await DockerClient.Containers.RemoveContainerAsync(ContainerId, new ContainerRemoveParameters());
-                await DockerClient.Containers.StopContainerAsync(ContainerId, new ContainerStopParameters());
-                break;
-        }
+        await DockerClient.Containers.StopContainerAsync(ContainerId, new ContainerStopParameters());
+        await DockerClient.Containers.RemoveContainerAsync(ContainerId, new ContainerRemoveParameters());
     }
 
     private async Task<string> CreateNewContainer()
