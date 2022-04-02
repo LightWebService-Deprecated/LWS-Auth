@@ -36,17 +36,9 @@ public class AccountControllerTest
                     service.AddSingleton(_mongoConfiguration);
 
                     // Remove Any massTransit services
-                    var massTransitServices = service.FirstOrDefault(a =>
-                        a.ServiceType == typeof(IHostedService) && a.ImplementationFactory != null &&
-                        a.ImplementationFactory.Method.ReturnType == typeof(MassTransitHostedService));
-                    service.Remove(massTransitServices);
-                    var massTransitDescriptors = service.Where(a =>
-                        a.ServiceType.Namespace.Contains("MassTransit", StringComparison.OrdinalIgnoreCase)).ToList();
-                    foreach (var eachDescriptor in massTransitDescriptors)
-                    {
-                        service.Remove(eachDescriptor);
-                    }
+                    service.RemoveProductionMassTransit();
 
+                    // Register In-Memory Mass Transit Services
                     service.AddMassTransit(a => { a.UsingInMemory(); });
                 });
             });
