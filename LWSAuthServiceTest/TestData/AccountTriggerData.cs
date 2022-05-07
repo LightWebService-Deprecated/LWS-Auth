@@ -1,7 +1,7 @@
 using LWSAuthService.Models.Request;
 using Xunit;
 
-namespace LWSAuthIntegrationTest.TestData;
+namespace LWSAuthServiceTest.TestData;
 
 public class AccountLoginFailTestSet
 {

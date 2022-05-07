@@ -1,4 +1,10 @@
 .idea
+**/coverage.cobertura.xml
+**/*.dotsettings
+**/*.user
+*.dotsettings
+**/TestResults
+cue.mod
 LWSAuthService.sln.DotSettings.user
 bin/
 obj/

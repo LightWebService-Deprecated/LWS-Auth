@@ -4,13 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using LWSAuthService.Models;
 using LWSAuthService.Repository;
+using LWSAuthServiceTest.Helpers;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using Xunit;
 
-namespace LWSAuthIntegrationTest.Repository;
+namespace LWSAuthServiceTest.Repository;
 
-[Collection("MongoDb")]
+[Collection("IntegrationCollections")]
 public class AccountRepositoryTest
 {
     private readonly IAccountRepository _accountRepository;
@@ -26,9 +27,9 @@ public class AccountRepositoryTest
         AccountRoles = new HashSet<AccountRole> {AccountRole.Admin}
     };
 
-    public AccountRepositoryTest(MongoDbFixture mongoDbFixture)
+    public AccountRepositoryTest(IntegrationTestFixture testFixture)
     {
-        var mongoContext = mongoDbFixture.MongoContext;
+        var mongoContext = testFixture._MongoContext;
         _accountCollection = mongoContext.AccountCollection;
         _accountRepository = new AccountRepository(mongoContext);
     }

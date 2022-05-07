@@ -7,7 +7,7 @@ using LWSAuthService.Service;
 using Moq;
 using Xunit;
 
-namespace LWSAuthUnitTest.Service;
+namespace LWSAuthServiceTest.Service;
 
 public class AccessTokenServiceTest
 {

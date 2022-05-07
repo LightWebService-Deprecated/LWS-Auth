@@ -4,7 +4,7 @@ using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace LWSAuthIntegrationTest.Extension;
+namespace LWSAuthServiceTest.Extension;
 
 public static class ServiceCollectionExtension
 {

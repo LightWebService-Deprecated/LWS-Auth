@@ -1,0 +1,17 @@
+version: "3"
+services:
+  mongodb:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: testPassword
+    container_name: "integration_testdb"
+    ports:
+      - '27017:27017'
+   
+  rabbitmq:
+    image: masstransit/rabbitmq
+    container_name: "integration_test_queue"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
