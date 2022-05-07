@@ -1,45 +1,52 @@
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using LWSAuthIntegrationTest.Extension;
-using LWSAuthIntegrationTest.TestData;
 using LWSAuthService.Configuration;
 using LWSAuthService.Models;
 using LWSAuthService.Models.Request;
+using LWSAuthServiceTest.Extension;
+using LWSAuthServiceTest.Helpers;
+using LWSAuthServiceTest.TestData;
 using MassTransit;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Xunit;
 
-namespace LWSAuthIntegrationTest.Controller;
+namespace LWSAuthServiceTest.Controller;
 
-[Collection("MongoDb")]
-public class AccountControllerTest
+[Collection("IntegrationCollections")]
+public class AccountControllerTest: IDisposable
 {
     private readonly MongoConfiguration _mongoConfiguration;
     private readonly HttpClient _httpClient;
     private readonly WebApplicationFactory<Program> _applicationFactory;
 
-    public AccountControllerTest(MongoDbFixture mongoDbFixture)
+    public AccountControllerTest(IntegrationTestFixture integrationTestFixture)
     {
-        _mongoConfiguration = mongoDbFixture.TestMongoConfiguration;
+        _mongoConfiguration = integrationTestFixture.TestMongoConfiguration;
+        var dictionaryConfiguration = new Dictionary<string, string>
+        {
+            ["RabbitMqSection:Host"] = "localhost",
+            ["RabbitMqSection:VirtualHost"] = "/",
+            ["RabbitMqSection:UserName"] = "guest",
+            ["RabbitMqSection:Password"] = "guest"
+        };
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(dictionaryConfiguration)
+            .Build();
         _applicationFactory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
+                builder.UseConfiguration(configuration);
                 builder.ConfigureTestServices(service =>
                 {
                     service.AddSingleton(_mongoConfiguration);
-
-                    // Remove Any massTransit services
-                    service.RemoveProductionMassTransit();
-
-                    // Register In-Memory Mass Transit Services
-                    service.AddMassTransit(a => { a.UsingInMemory(); });
                 });
             });
         _httpClient = _applicationFactory.CreateClient();
@@ -279,5 +286,11 @@ public class AccountControllerTest
         Assert.NotNull(responseBody.Id);
 
         return (registerRequest, responseBody);
+    }
+
+    public void Dispose()
+    {
+        _httpClient.Dispose();
+        _applicationFactory.Dispose();
     }
 }

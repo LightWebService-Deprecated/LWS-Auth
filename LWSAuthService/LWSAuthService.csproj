@@ -20,7 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <InternalsVisibleTo Include="LWSAuthIntegrationTest" />
+        <InternalsVisibleTo Include="LWSAuthServiceTest" />
     </ItemGroup>
 
 </Project>

@@ -3,7 +3,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace LWSAuthIntegrationTest.Extension;
+namespace LWSAuthServiceTest.Extension;
 
 public static class HttpClientExtension
 {

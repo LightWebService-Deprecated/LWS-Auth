@@ -6,7 +6,7 @@ using LWSEvent.Event.Account;
 using MassTransit.Testing;
 using Xunit;
 
-namespace LWSAuthIntegrationTest.Repository;
+namespace LWSAuthServiceTest.Repository;
 
 public class EventRepositoryTest : IDisposable
 {

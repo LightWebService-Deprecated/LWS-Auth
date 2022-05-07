@@ -3,13 +3,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using LWSAuthService.Models;
 using LWSAuthService.Repository;
+using LWSAuthServiceTest.Helpers;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using Xunit;
 
-namespace LWSAuthIntegrationTest.Repository;
+namespace LWSAuthServiceTest.Repository;
 
-[Collection("MongoDb")]
+[Collection("IntegrationCollections")]
 public class AccessTokenRepositoryTest
 {
     private readonly IMongoCollection<AccessToken> _accessTokenCollection;
@@ -22,12 +23,12 @@ public class AccessTokenRepositoryTest
         UserId = "testUserId"
     };
 
-    public AccessTokenRepositoryTest(MongoDbFixture mongoDbFixture)
+    public AccessTokenRepositoryTest(IntegrationTestFixture integrationTestFixture)
     {
-        var mongoContext = mongoDbFixture.MongoContext;
-        _accessTokenCollection = mongoContext.AccessTokenCollection;
+        var context = integrationTestFixture._MongoContext;
+        _accessTokenCollection = context.AccessTokenCollection;
         _accessTokenRepository =
-            new AccessTokenRepository(mongoContext);
+            new AccessTokenRepository(context);
     }
 
     private async Task<List<AccessToken>> ListAccessTokenAsync()
