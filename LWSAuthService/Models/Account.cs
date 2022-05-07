@@ -5,6 +5,15 @@ using Newtonsoft.Json;
 
 namespace LWSAuthService.Models;
 
+public enum AccountState
+{
+    Created,
+    Ready,
+    Revoked,
+    DroppedOut,
+    Error
+}
+
 /// <summary>
 /// User model description. All about users!
 /// </summary>
@@ -31,6 +40,16 @@ public class Account
     /// User's Password Information. Note this should be encrypted.
     /// </summary>
     public string UserPassword { get; set; }
+    
+    /// <summary>
+    /// User Account's State
+    /// </summary>
+    public AccountState AccountState { get; set; }
+
+    /// <summary>
+    /// Namespace : JWT Mapper
+    /// </summary>
+    public Dictionary<string, string> JwtMap { get; set; } = new();
 
     public HashSet<AccountRole> AccountRoles { get; set; }
 }

@@ -1,6 +1,7 @@
 using LWSAuthService.Configuration;
 using LWSAuthService.Repository;
 using LWSAuthService.Service;
+using LWSAuthService.Service.Consumers;
 using LWSEvent.Event.Account;
 using MassTransit;
 using Prometheus;
@@ -12,6 +13,7 @@ var rabbitMqSection = builder.Configuration.GetSection("RabbitMqSection")
     .Get<RabbitMqConfiguration>();
 builder.Services.AddMassTransit(a =>
 {
+    a.AddConsumer<TokenCreationConsumer>();
     a.UsingRabbitMq((ctx, cfg) =>
     {
         cfg.Host(rabbitMqSection.Host, rabbitMqSection.VirtualHost, h =>
@@ -30,6 +32,12 @@ builder.Services.AddMassTransit(a =>
         {
             // This is the 'topic' in ASB, or 'exchange' in RabbitMQ
             x.SetEntityName("account.deleted");
+        });
+        
+        cfg.ReceiveEndpoint("token.created:AuthConsumer", config =>
+        {
+            config.Bind("token.created");
+            config.ConfigureConsumer<TokenCreationConsumer>(ctx);
         });
     });
 });

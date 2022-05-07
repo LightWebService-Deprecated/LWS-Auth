@@ -17,7 +17,8 @@ public class RegisterRequest
         UserEmail = this.UserEmail,
         UserNickName = this.UserNickName,
         UserPassword = BCrypt.Net.BCrypt.HashPassword(this.UserPassword),
-        AccountRoles = new HashSet<AccountRole> {AccountRole.User}
+        AccountRoles = new HashSet<AccountRole> {AccountRole.User},
+        AccountState = AccountState.Created
     };
 
     public InternalCommunication<object> ValidateModel()
