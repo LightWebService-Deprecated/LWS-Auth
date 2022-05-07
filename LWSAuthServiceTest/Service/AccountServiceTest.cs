@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -300,5 +301,60 @@ public class AccountServiceTest
         // Check
         Assert.NotNull(response);
         Assert.Equal(ResultType.Success, response.ResultType);
+    }
+
+    [Fact(DisplayName = "SetNamespaceToken: SetNamespaceToken should d nothing when Account is null.")]
+    public async Task Is_SetNamespaceToken_Does_nothing_When_Account_Is_Null()
+    {
+        // Let
+        var targetEvent = new TokenCreatedEvent
+        {
+            AccountId = Ulid.NewUlid().ToString(),
+            NameSpace = $"namespace-test",
+            NameSpaceToken = Guid.NewGuid().ToString()
+        };
+        _mockAccountRepository.Setup(a => a.GetAccountByIdAsync(targetEvent.AccountId))
+            .ReturnsAsync(value: null);
+
+        // Do
+        await AccountService.SetNamespaceToken(targetEvent);
+
+        // Verify
+        _mockAccountRepository.VerifyAll();
+    }
+
+    [Fact(DisplayName = "SetNamespaceToken: SetNamespaceToken should update account when event is normal")]
+    public async Task Is_SetNamespaceToken_Updates_Account_With_Jwt()
+    {
+        // Let
+        var targetEvent = new TokenCreatedEvent
+        {
+            AccountId = Ulid.NewUlid().ToString(),
+            NameSpace = "test-default",
+            NameSpaceToken = Guid.NewGuid().ToString()
+        };
+        var testAccount = new Account
+        {
+            Id = targetEvent.AccountId,
+            JwtMap = new Dictionary<string, string>(),
+            AccountState = AccountState.Created
+        };
+        _mockAccountRepository.Setup(a => a.GetAccountByIdAsync(testAccount.Id))
+            .ReturnsAsync(testAccount);
+        _mockAccountRepository.Setup(a => a.UpdateAccountAsync(It.IsAny<Account>()))
+            .Callback((Account account) =>
+            {
+                Assert.Equal(testAccount.Id, account.Id);
+                Assert.Single(testAccount.JwtMap);
+                Assert.True(testAccount.JwtMap.ContainsKey(targetEvent.NameSpace));
+                Assert.Equal(testAccount.JwtMap[targetEvent.NameSpace], targetEvent.NameSpaceToken);
+                Assert.Equal(AccountState.Ready, testAccount.AccountState);
+            });
+        
+        // Do
+        await AccountService.SetNamespaceToken(targetEvent);
+        
+        // Verify
+        _mockAccountRepository.VerifyAll();
     }
 }

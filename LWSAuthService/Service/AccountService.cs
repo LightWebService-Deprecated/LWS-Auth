@@ -114,6 +114,22 @@ public class AccountService
         };
     }
 
+    public async Task SetNamespaceToken(TokenCreatedEvent tokenEvent)
+    {
+        // Get Account
+        var account = await _accountRepository.GetAccountByIdAsync(tokenEvent.AccountId);
+        
+        // Do nothing when account is null
+        if (account == null) return;
+        
+        // Add JWT to Map
+        account.JwtMap[tokenEvent.NameSpace] = tokenEvent.NameSpaceToken;
+        account.AccountState = AccountState.Ready;
+        
+        // Save it
+        await _accountRepository.UpdateAccountAsync(account);
+    }
+
     private bool CheckPasswordCorrect(string plainPassword, string hashedPassword)
     {
         bool correct = false;
